@@ -23,7 +23,7 @@ public class HistoryService {
      * 查询全部历史，按时间倒序。
      */
     public List<CalculationHistory> listAll() {
-        return historyRepository.findAllByOrderByCreatedAtDesc();
+        return historyRepository.findAllByOrderByCreatedAtDescIdDesc();
     }
 
     /**

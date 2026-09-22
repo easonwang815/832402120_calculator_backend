@@ -43,18 +43,21 @@ public class ExpressionParser {
             if (Character.isDigit(c) || c == '.') {
                 int start = i;
                 boolean hasDot = false;
+                boolean hasDigit = false;
                 while (i < n && (Character.isDigit(input.charAt(i)) || input.charAt(i) == '.')) {
                     if (input.charAt(i) == '.') {
                         if (hasDot) {
                             throw new CalculatorException("Invalid expression"); // 1.2.3
                         }
                         hasDot = true;
+                    } else {
+                        hasDigit = true;
                     }
                     i++;
                 }
                 String num = input.substring(start, i);
-                // 单独一个 "." 或 ".5" 这类写法按无效处理（要求数字至少一位）
-                if (!hasDot && num.isEmpty()) {
+                // 单独一个 "." 不构成数字；允许 .5 和 1. 这类常见小数写法。
+                if (!hasDigit) {
                     throw new CalculatorException("Invalid expression");
                 }
                 tokens.add(new Token(TokenType.NUMBER, num));

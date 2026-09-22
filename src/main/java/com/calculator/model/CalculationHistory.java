@@ -25,7 +25,7 @@ public class CalculationHistory {
     @Column(nullable = false, length = 255)
     private String expression;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 1024)
     private String result;
 
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -13,5 +13,5 @@ public interface HistoryRepository extends JpaRepository<CalculationHistory, Lon
     /**
      * 按时间倒序查询全部历史（最新的在最前）。
      */
-    List<CalculationHistory> findAllByOrderByCreatedAtDesc();
+    List<CalculationHistory> findAllByOrderByCreatedAtDescIdDesc();
 }

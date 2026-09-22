@@ -54,6 +54,8 @@ src/main/java/com/calculator/
 └── config/              # WebConfig(CORS) / GlobalExceptionHandler(统一异常)
 ```
 
+需求、API、数据库和架构设计文档保存在 [`docs/`](docs/) 目录。
+
 **一次计算的完整流程**
 
 ```
@@ -107,6 +109,7 @@ java -jar target/calculator-backend-1.0.0.jar
 | `server.port` | 8080 | 服务端口 |
 | 开发数据库 | H2 文件模式 | 数据持久化在 `./data/calculator`，重启不丢失 |
 | `spring.jpa.hibernate.ddl-auto` | update（开发） | 自动建表 |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:8000,http://127.0.0.1:8000` | 允许访问 API 的前端域名，多个域名用逗号分隔 |
 
 **生产环境（部署时）**：使用 MySQL，连接参数通过环境变量注入：
 
@@ -114,6 +117,8 @@ java -jar target/calculator-backend-1.0.0.jar
 # 先设置环境变量
 export DB_HOST=... DB_PORT=3306 DB_NAME=calculator
 export DB_USER=... DB_PASSWORD=...
+export CORS_ALLOWED_ORIGINS=https://your-frontend.example.com
+export PORT=8080
 
 # 以 prod 配置启动
 mvn spring-boot:run -Dspring-boot.run.profiles=prod
@@ -122,7 +127,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=prod
 ## 7. 数据库初始化
 
 - **开发环境**：`ddl-auto=update` 自动创建表结构，无需手动操作
-- **生产环境（MySQL）**：先创建数据库 `CREATE DATABASE calculator DEFAULT CHARSET utf8mb4;`，JPA 首次启动自动建表；建表 SQL 参考 `docs/04_数据库设计.md`（仓库 docs 目录或工程目录下同名文档）
+- **生产环境（MySQL）**：先创建数据库 `CREATE DATABASE calculator DEFAULT CHARSET utf8mb4;`；启动时执行 [`schema-mysql.sql`](src/main/resources/schema-mysql.sql) 并由 JPA 校验表结构
 
 表结构：
 
@@ -130,7 +135,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=prod
 calculation_history
 ├── id          BIGINT AUTO_INCREMENT 主键
 ├── expression  VARCHAR(255)          表达式原文
-├── result      VARCHAR(50)           计算结果（字符串，避免浮点精度问题）
+├── result      VARCHAR(1024)         计算结果（字符串，避免浮点精度问题）
 └── created_at  DATETIME              计算时间
 ```
 
@@ -140,7 +145,7 @@ calculation_history
 mvn test
 ```
 
-单元测试覆盖：四则运算、运算符优先级、括号、一元正负号、小数、除零、无效表达式等 7 组用例。
+测试覆盖：四则运算、运算符优先级、括号、一元正负号、小数、除零、无效表达式，以及 API 请求校验、错误状态码、历史查询和删除。
 
 ## 9. 代码规范
 

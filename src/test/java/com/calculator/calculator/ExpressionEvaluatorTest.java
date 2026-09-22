@@ -63,6 +63,8 @@ class ExpressionEvaluatorTest {
         assertEquals("10", evaluator.evaluate("2.5*4"));
         assertEquals("6.3", evaluator.evaluate("1.2+5.1"));
         assertEquals("0.5", evaluator.evaluate("1/2"));
+        assertEquals("0.5", evaluator.evaluate(".5"));
+        assertEquals("1", evaluator.evaluate("1."));
         assertEquals("3.1428571429", evaluator.evaluate("22/7"));
     }
 
@@ -84,6 +86,7 @@ class ExpressionEvaluatorTest {
         assertInvalid("(1+2");
         assertInvalid("1+2)");
         assertInvalid("1.2.3");
+        assertInvalid(".");
         assertInvalid("()");
         assertInvalid("*3");
         assertInvalid("**2");

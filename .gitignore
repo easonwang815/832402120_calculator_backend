@@ -1,0 +1,17 @@
+# Maven 构建产物
+target/
+
+# 本地开发数据库（H2 文件，不应上传）
+data/
+
+# IDE 配置
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# 日志与系统文件
+*.log
+.DS_Store

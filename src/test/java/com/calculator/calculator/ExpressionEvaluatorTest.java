@@ -69,6 +69,26 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
+    @DisplayName("次方运算与右结合优先级")
+    void powers() {
+        assertEquals("8", evaluator.evaluate("2^3"));
+        assertEquals("512", evaluator.evaluate("2^3^2"));
+        assertEquals("-4", evaluator.evaluate("-2^2"));
+        assertEquals("0.25", evaluator.evaluate("2^-2"));
+        assertEquals("3", evaluator.evaluate("9^0.5"));
+    }
+
+    @Test
+    @DisplayName("开方和角度制三角函数")
+    void scientificFunctions() {
+        assertEquals("3", evaluator.evaluate("sqrt(9)"));
+        assertEquals("0.5", evaluator.evaluate("sin(30)"));
+        assertEquals("0.5", evaluator.evaluate("cos(60)"));
+        assertEquals("1", evaluator.evaluate("tan(45)"));
+        assertEquals("4", evaluator.evaluate("sqrt(2^4)"));
+    }
+
+    @Test
     @DisplayName("除零处理")
     void divisionByZero() {
         CalculatorException ex = assertThrows(CalculatorException.class, () -> evaluator.evaluate("10/0"));
@@ -92,6 +112,22 @@ class ExpressionEvaluatorTest {
         assertInvalid("**2");
         assertInvalid("1 2");
         assertInvalid("1/");
+        assertInvalid("sin30");
+        assertInvalid("sqrt()");
+        assertInvalid("unknown(1)");
+        assertInvalid("2(3)");
+    }
+
+    @Test
+    @DisplayName("科学函数定义域错误")
+    void invalidFunctionArguments() {
+        CalculatorException sqrtError = assertThrows(
+                CalculatorException.class, () -> evaluator.evaluate("sqrt(-1)"));
+        assertEquals("Invalid function argument", sqrtError.getMessage());
+
+        CalculatorException tanError = assertThrows(
+                CalculatorException.class, () -> evaluator.evaluate("tan(90)"));
+        assertEquals("Invalid function argument", tanError.getMessage());
     }
 
     private void assertInvalid(String expr) {

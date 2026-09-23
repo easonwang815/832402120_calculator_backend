@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -25,8 +26,11 @@ public class HistoryController {
     }
 
     @GetMapping("/history")
-    public ApiResponse listAll() {
-        return ApiResponse.successData(historyService.listAll());
+    public ApiResponse search(
+            @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        return ApiResponse.successData(historyService.search(keyword, page, size));
     }
 
     @DeleteMapping("/history/{id}")

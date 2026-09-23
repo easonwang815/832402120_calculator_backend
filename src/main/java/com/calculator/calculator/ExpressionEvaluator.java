@@ -1,115 +1,102 @@
 package com.calculator.calculator;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.function.BiFunction;
 
 /**
- * 表达式求值器：采用调度场算法（Shunting-yard）。
- *
- * 流程：
- * 1. 中缀表达式 → 后缀表达式（逆波兰式），天然解决运算符优先级与括号；
- * 2. 后缀表达式用数值栈求值；
- * 3. 数字统一使用 BigDecimal 计算，除法保留 10 位小数（HALF_UP），避免浮点精度问题。
- *
- * 一元正负号处理：当 '-' 出现在表达式开头，或前一个 Token 是运算符/左括号时，
- * 视为一元负号（Token value = "-u"，优先级最高），求值时对栈顶数字取负。
- * 一元正号（如 +5）直接忽略，不影响数值。
- *
- * 不使用 eval / ScriptEngine 等执行任意代码的方式，只做数学运算，满足作业安全要求。
+ * 表达式求值器：使用调度场算法将中缀表达式转为后缀表达式后求值。
+ * 支持四则运算、一元正负号、次方以及 sin/cos/tan/sqrt 科学函数。
+ * 三角函数使用角度制。
  */
 public class ExpressionEvaluator {
 
-    /** 除法结果保留的小数位数 */
     private static final int SCALE = 10;
-
-    /** 一元负号标记 */
+    private static final int MAX_INTEGER_EXPONENT = 1000;
+    private static final double ZERO_EPSILON = 1e-12;
     private static final String UNARY_MINUS = "-u";
 
-    /**
-     * 计算表达式并返回格式化后的结果字符串。
-     *
-     * @param expression 表达式原文，如 "(1+2)*3"
-     * @return 计算结果，如 "9"、"0.5"
-     * @throws CalculatorException 无效表达式或除零
-     */
     public String evaluate(String expression) {
         List<Token> tokens = new ExpressionParser().parse(expression);
-        List<Token> postfix = toPostfix(tokens);
-        BigDecimal result = evaluatePostfix(postfix);
-        // stripTrailingZeros 去掉尾零（5.0000000000 → 5），toPlainString 避免科学计数法
-        return result.stripTrailingZeros().toPlainString();
+        BigDecimal result = evaluatePostfix(toPostfix(tokens));
+        String formatted = result.stripTrailingZeros().toPlainString();
+        if (formatted.length() > 1024) {
+            throw new CalculatorException("Result is too large");
+        }
+        return formatted;
     }
 
-    /**
-     * 调度场算法：中缀 Token 列表 → 后缀（逆波兰）Token 列表。
-     */
     private List<Token> toPostfix(List<Token> tokens) {
         Deque<Token> opStack = new ArrayDeque<>();
-        List<Token> output = new java.util.ArrayList<>();
-        boolean expectOperand = true; // 期望操作数：用于判断 '-' 是否为一元
+        List<Token> output = new ArrayList<>();
+        boolean expectOperand = true;
 
-        for (Token token : tokens) {
+        for (int i = 0; i < tokens.size(); i++) {
+            Token token = tokens.get(i);
             switch (token.getType()) {
                 case NUMBER:
+                    if (!expectOperand) {
+                        throw new CalculatorException("Invalid expression");
+                    }
                     output.add(token);
                     expectOperand = false;
                     break;
 
-                case PLUS:
-                    if (expectOperand) {
-                        // 一元正号：直接忽略，不产生任何 Token
-                        break;
-                    }
-                    while (!opStack.isEmpty() && precedence(opStack.peek()) >= 1) {
-                        output.add(opStack.pop());
+                case FUNCTION:
+                    if (!expectOperand || i + 1 >= tokens.size()
+                            || tokens.get(i + 1).getType() != TokenType.LPAREN) {
+                        throw new CalculatorException("Invalid expression");
                     }
                     opStack.push(token);
+                    break;
+
+                case PLUS:
+                    if (expectOperand) {
+                        break;
+                    }
+                    pushOperator(token, opStack, output);
                     expectOperand = true;
                     break;
 
                 case MINUS:
                     if (expectOperand) {
-                        // 一元负号：压入高优先级标记
                         opStack.push(new Token(TokenType.MINUS, UNARY_MINUS));
                         break;
                     }
-                    while (!opStack.isEmpty() && precedence(opStack.peek()) >= 1) {
-                        output.add(opStack.pop());
-                    }
-                    opStack.push(token);
+                    pushOperator(token, opStack, output);
                     expectOperand = true;
                     break;
 
                 case MULTIPLY:
                 case DIVIDE:
-                    while (!opStack.isEmpty() && precedence(opStack.peek()) >= 2) {
-                        output.add(opStack.pop());
+                case POWER:
+                    if (expectOperand) {
+                        throw new CalculatorException("Invalid expression");
                     }
-                    opStack.push(token);
+                    pushOperator(token, opStack, output);
                     expectOperand = true;
                     break;
 
                 case LPAREN:
+                    if (!expectOperand) {
+                        throw new CalculatorException("Invalid expression");
+                    }
                     opStack.push(token);
                     expectOperand = true;
                     break;
 
                 case RPAREN:
-                    // 弹出直到左括号；若找不到左括号则括号不匹配
-                    boolean matched = false;
-                    while (!opStack.isEmpty()) {
-                        Token top = opStack.pop();
-                        if (top.getType() == TokenType.LPAREN) {
-                            matched = true;
-                            break;
-                        }
-                        output.add(top);
-                    }
-                    if (!matched) {
+                    if (expectOperand) {
                         throw new CalculatorException("Invalid expression");
+                    }
+                    popUntilLeftParenthesis(opStack, output);
+                    if (!opStack.isEmpty() && opStack.peek().getType() == TokenType.FUNCTION) {
+                        output.add(opStack.pop());
                     }
                     expectOperand = false;
                     break;
@@ -119,101 +106,182 @@ public class ExpressionEvaluator {
             }
         }
 
-        // 弹出剩余运算符；若栈中残留括号说明括号不匹配
+        if (expectOperand) {
+            throw new CalculatorException("Invalid expression");
+        }
         while (!opStack.isEmpty()) {
             Token top = opStack.pop();
-            if (top.getType() == TokenType.LPAREN || top.getType() == TokenType.RPAREN) {
+            if (top.getType() == TokenType.LPAREN || top.getType() == TokenType.RPAREN
+                    || top.getType() == TokenType.FUNCTION) {
                 throw new CalculatorException("Invalid expression");
             }
             output.add(top);
         }
-
         return output;
     }
 
-    /**
-     * 运算符优先级：+ - 为 1，* / 为 2，一元负号 3，括号 0。
-     */
-    private int precedence(Token token) {
-        switch (token.getType()) {
-            case PLUS:
-            case MINUS:
-                if (UNARY_MINUS.equals(token.getValue())) {
-                    return 3;
-                }
-                return 1;
-            case MULTIPLY:
-            case DIVIDE:
-                return 2;
-            default:
-                return 0;
+    private void pushOperator(Token operator, Deque<Token> opStack, List<Token> output) {
+        while (!opStack.isEmpty() && isOperator(opStack.peek())
+                && (precedence(opStack.peek()) > precedence(operator)
+                || (!isRightAssociative(operator)
+                && precedence(opStack.peek()) == precedence(operator)))) {
+            output.add(opStack.pop());
         }
+        opStack.push(operator);
     }
 
-    /**
-     * 后缀表达式求值：数值栈。
-     */
+    private void popUntilLeftParenthesis(Deque<Token> opStack, List<Token> output) {
+        while (!opStack.isEmpty() && opStack.peek().getType() != TokenType.LPAREN) {
+            output.add(opStack.pop());
+        }
+        if (opStack.isEmpty()) {
+            throw new CalculatorException("Invalid expression");
+        }
+        opStack.pop();
+    }
+
+    private boolean isOperator(Token token) {
+        return token.getType() == TokenType.PLUS
+                || token.getType() == TokenType.MINUS
+                || token.getType() == TokenType.MULTIPLY
+                || token.getType() == TokenType.DIVIDE
+                || token.getType() == TokenType.POWER;
+    }
+
+    private boolean isRightAssociative(Token token) {
+        return token.getType() == TokenType.POWER || UNARY_MINUS.equals(token.getValue());
+    }
+
+    private int precedence(Token token) {
+        if (UNARY_MINUS.equals(token.getValue())) {
+            return 3;
+        }
+        return switch (token.getType()) {
+            case PLUS, MINUS -> 1;
+            case MULTIPLY, DIVIDE -> 2;
+            case POWER -> 4;
+            default -> 0;
+        };
+    }
+
     private BigDecimal evaluatePostfix(List<Token> postfix) {
         Deque<BigDecimal> stack = new ArrayDeque<>();
-
         for (Token token : postfix) {
             switch (token.getType()) {
                 case NUMBER:
                     stack.push(new BigDecimal(token.getValue()));
                     break;
-
                 case PLUS:
-                    stack.push(applyBinary(stack, (a, b) -> a.add(b)));
+                    stack.push(applyBinary(stack, BigDecimal::add));
                     break;
-
                 case MINUS:
                     if (UNARY_MINUS.equals(token.getValue())) {
-                        if (stack.isEmpty()) {
-                            throw new CalculatorException("Invalid expression");
-                        }
+                        requireOperands(stack, 1);
                         stack.push(stack.pop().negate());
                     } else {
-                        stack.push(applyBinary(stack, (a, b) -> a.subtract(b)));
+                        stack.push(applyBinary(stack, BigDecimal::subtract));
                     }
                     break;
-
                 case MULTIPLY:
-                    stack.push(applyBinary(stack, (a, b) -> a.multiply(b)));
+                    stack.push(applyBinary(stack, BigDecimal::multiply));
                     break;
-
                 case DIVIDE:
-                    if (stack.size() < 2) {
-                        throw new CalculatorException("Invalid expression");
-                    }
-                    BigDecimal divisor = stack.pop();
-                    BigDecimal dividend = stack.pop();
-                    if (divisor.compareTo(BigDecimal.ZERO) == 0) {
-                        throw new CalculatorException("Division by zero");
-                    }
-                    stack.push(dividend.divide(divisor, SCALE, RoundingMode.HALF_UP));
+                    stack.push(divide(stack));
                     break;
-
+                case POWER:
+                    stack.push(power(stack));
+                    break;
+                case FUNCTION:
+                    requireOperands(stack, 1);
+                    stack.push(applyFunction(token.getValue(), stack.pop()));
+                    break;
                 default:
                     throw new CalculatorException("Invalid expression");
             }
         }
-
         if (stack.size() != 1) {
             throw new CalculatorException("Invalid expression");
         }
         return stack.pop();
     }
 
-    /**
-     * 弹出两个操作数并执行二元运算；操作数不足则表达式无效。
-     */
+    private BigDecimal divide(Deque<BigDecimal> stack) {
+        requireOperands(stack, 2);
+        BigDecimal divisor = stack.pop();
+        BigDecimal dividend = stack.pop();
+        if (divisor.compareTo(BigDecimal.ZERO) == 0) {
+            throw new CalculatorException("Division by zero");
+        }
+        return dividend.divide(divisor, SCALE, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal power(Deque<BigDecimal> stack) {
+        requireOperands(stack, 2);
+        BigDecimal exponent = stack.pop();
+        BigDecimal base = stack.pop();
+        try {
+            int integerExponent = exponent.intValueExact();
+            if (Math.abs((long) integerExponent) > MAX_INTEGER_EXPONENT) {
+                throw new CalculatorException("Result is too large");
+            }
+            if (integerExponent >= 0) {
+                return base.pow(integerExponent, MathContext.DECIMAL128);
+            }
+            if (base.compareTo(BigDecimal.ZERO) == 0) {
+                throw new CalculatorException("Division by zero");
+            }
+            return BigDecimal.ONE.divide(
+                    base.pow(-integerExponent, MathContext.DECIMAL128),
+                    SCALE,
+                    RoundingMode.HALF_UP);
+        } catch (ArithmeticException ignored) {
+            return fromFiniteDouble(Math.pow(base.doubleValue(), exponent.doubleValue()));
+        }
+    }
+
+    private BigDecimal applyFunction(String function, BigDecimal argument) {
+        double value = argument.doubleValue();
+        return switch (function) {
+            case "sqrt" -> {
+                if (argument.compareTo(BigDecimal.ZERO) < 0) {
+                    throw new CalculatorException("Invalid function argument");
+                }
+                yield argument.sqrt(MathContext.DECIMAL128);
+            }
+            case "sin" -> fromFiniteDouble(Math.sin(Math.toRadians(value)));
+            case "cos" -> fromFiniteDouble(Math.cos(Math.toRadians(value)));
+            case "tan" -> {
+                double radians = Math.toRadians(value);
+                if (Math.abs(Math.cos(radians)) < ZERO_EPSILON) {
+                    throw new CalculatorException("Invalid function argument");
+                }
+                yield fromFiniteDouble(Math.tan(radians));
+            }
+            default -> throw new CalculatorException("Invalid expression");
+        };
+    }
+
+    private BigDecimal fromFiniteDouble(double value) {
+        if (!Double.isFinite(value)) {
+            throw new CalculatorException("Invalid function argument");
+        }
+        if (Math.abs(value) < ZERO_EPSILON) {
+            return BigDecimal.ZERO;
+        }
+        return BigDecimal.valueOf(value).setScale(12, RoundingMode.HALF_UP);
+    }
+
     private BigDecimal applyBinary(Deque<BigDecimal> stack,
-                                   java.util.function.BiFunction<BigDecimal, BigDecimal, BigDecimal> op) {
-        if (stack.size() < 2) {
+                                   BiFunction<BigDecimal, BigDecimal, BigDecimal> operation) {
+        requireOperands(stack, 2);
+        BigDecimal right = stack.pop();
+        BigDecimal left = stack.pop();
+        return operation.apply(left, right);
+    }
+
+    private void requireOperands(Deque<BigDecimal> stack, int count) {
+        if (stack.size() < count) {
             throw new CalculatorException("Invalid expression");
         }
-        BigDecimal b = stack.pop();
-        BigDecimal a = stack.pop();
-        return op.apply(a, b);
     }
 }

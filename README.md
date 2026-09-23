@@ -2,7 +2,7 @@
 
 EE308 第一次作业「前后端分离计算器系统」的**后端服务**。
 
-负责表达式解析与计算、计算历史的后端数据库持久化（保存 / 查询 / 删除 / 清空），通过 REST API（HTTP + JSON）与前端通信。核心计算使用**自实现的调度场算法（Shunting-yard）**完成，不依赖 `eval` / `ScriptEngine` 等执行任意代码的方式，满足作业安全要求。
+负责四则与科学表达式计算、进制转换、计算历史的数据库持久化与搜索分页，通过 REST API（HTTP + JSON）与前端通信。核心计算使用**自实现的调度场算法（Shunting-yard）**完成，不依赖 `eval` / `ScriptEngine` 等执行任意代码的方式。
 
 ---
 
@@ -28,7 +28,7 @@ Service 层          业务编排：解析计算 → 保存历史 → 返回结�
    │
    ├──► calculator 包   核心计算（纯 Java，不依赖 Spring）
    │       词法分析(ExpressionParser) → 调度场转后缀(ExpressionEvaluator)
-   │       处理：运算符优先级 / 括号 / 一元正负 / 小数 / 除零 / 无效表达式
+   │       处理：四则 / 次方 / 开方 / 角度制三角函数 / 括号 / 异常输入
    │
    ▼
 Repository 层        JPA 数据访问（增 / 查 / 删）
@@ -73,9 +73,10 @@ src/main/java/com/calculator/
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/api/calculate` | 计算表达式（成功同时写入历史） |
-| GET | `/api/history` | 查询全部历史（时间倒序） |
+| GET | `/api/history?keyword=&page=0&size=5` | 搜索并分页查询历史 |
 | DELETE | `/api/history/{id}` | 删除指定历史记录 |
 | DELETE | `/api/history` | 清空全部历史（加分项） |
+| POST | `/api/convert` | 2 / 8 / 10 / 16 进制整数互转 |
 
 统一响应：成功 `{"success":true,...}`；失败 `{"success":false,"message":"..."}`。
 
@@ -145,7 +146,7 @@ calculation_history
 mvn test
 ```
 
-测试覆盖：四则运算、运算符优先级、括号、一元正负号、小数、除零、无效表达式，以及 API 请求校验、错误状态码、历史查询和删除。
+测试覆盖：四则运算、次方、开方、三角函数、运算符优先级、异常处理、进制转换、历史搜索分页，以及 API 请求校验和错误状态码。
 
 ## 9. 代码规范
 

@@ -8,7 +8,8 @@ import java.util.List;
  *
  * 支持的语法：
  * - 数字（含小数，如 12、3.14）
- * - 二元运算符 + - * /
+ * - 二元运算符 + - * / ^
+ * - 科学函数 sin / cos / tan / sqrt
  * - 括号 ( )
  * - 一元正负号（如 -5、3*-2、+5），一元号在后续调度场算法中处理
  *
@@ -61,6 +62,16 @@ public class ExpressionParser {
                     throw new CalculatorException("Invalid expression");
                 }
                 tokens.add(new Token(TokenType.NUMBER, num));
+            } else if (Character.isLetter(c)) {
+                int start = i;
+                while (i < n && Character.isLetter(input.charAt(i))) {
+                    i++;
+                }
+                String function = input.substring(start, i).toLowerCase();
+                if (!isSupportedFunction(function)) {
+                    throw new CalculatorException("Invalid expression");
+                }
+                tokens.add(new Token(TokenType.FUNCTION, function));
             } else {
                 switch (c) {
                     case '+':
@@ -77,6 +88,10 @@ public class ExpressionParser {
                         break;
                     case '/':
                         tokens.add(new Token(TokenType.DIVIDE, "/"));
+                        i++;
+                        break;
+                    case '^':
+                        tokens.add(new Token(TokenType.POWER, "^"));
                         i++;
                         break;
                     case '(':
@@ -97,5 +112,12 @@ public class ExpressionParser {
             throw new CalculatorException("Invalid expression");
         }
         return tokens;
+    }
+
+    private boolean isSupportedFunction(String function) {
+        return "sin".equals(function)
+                || "cos".equals(function)
+                || "tan".equals(function)
+                || "sqrt".equals(function);
     }
 }

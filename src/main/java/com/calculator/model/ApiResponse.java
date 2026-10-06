@@ -2,13 +2,7 @@ package com.calculator.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-/**
- * 统一 API 响应。
- * - 计算成功：{ success: true, expression, result }
- * - 计算失败：{ success: false, message }
- * - 列表成功：{ success: true, data: [...] }
- * 为 null 的字段不参与 JSON 序列化，保证响应干净。
- */
+/** Returns calculation results, data or errors as JSON. Null fields are left out. */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse {
 

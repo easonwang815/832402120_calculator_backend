@@ -10,10 +10,7 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 
-/**
- * 计算历史实体，对应数据库表 calculation_history。
- * created_at 在保存前由 @PrePersist 自动赋值，兼容 H2/MySQL 等数据库。
- */
+/** A saved calculation in the calculation_history table. */
 @Entity
 @Table(name = "calculation_history")
 public class CalculationHistory {
@@ -32,7 +29,7 @@ public class CalculationHistory {
     private LocalDateTime createdAt;
 
     protected CalculationHistory() {
-        // JPA 需要无参构造
+        // JPA needs a constructor with no arguments.
     }
 
     public CalculationHistory(String expression, String result) {
@@ -40,7 +37,7 @@ public class CalculationHistory {
         this.result = result;
     }
 
-    /** 保存前自动写入计算时间 */
+    /** Sets the time before saving a new record. */
     @PrePersist
     void onCreate() {
         this.createdAt = LocalDateTime.now();

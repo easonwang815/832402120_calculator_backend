@@ -7,10 +7,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
 
-/**
- * 跨域配置：前后端分离部署时端口/域名不同，浏览器会拦截跨域请求。
- * 开发期允许所有来源；部署期可收敛为前端实际地址。
- */
+/** Allows frontend requests from the configured addresses. */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 

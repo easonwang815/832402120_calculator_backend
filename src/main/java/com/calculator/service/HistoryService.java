@@ -10,10 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-/**
- * 历史记录服务：查询 / 删除 / 清空。
- * 数据一律来自后端数据库。
- */
+/** Reads, searches and deletes history in the backend database. */
 @Service
 public class HistoryService {
 
@@ -23,7 +20,7 @@ public class HistoryService {
         this.historyRepository = historyRepository;
     }
 
-    /** 按关键词搜索表达式/结果，并按时间倒序分页。 */
+    /** Searches expressions and results and returns the newest records first. */
     public HistoryPage search(String keyword, int page, int size) {
         if (page < 0 || size < 1 || size > 50) {
             throw new CalculatorException("Invalid pagination parameters");
@@ -43,9 +40,7 @@ public class HistoryService {
                 result.getTotalElements(), result.getTotalPages());
     }
 
-    /**
-     * 删除指定 id 的历史记录；不存在时抛 NotFoundException（全局处理器转 404）。
-     */
+    /** Deletes one record, or reports that the ID does not exist. */
     public void deleteById(Long id) {
         if (!historyRepository.existsById(id)) {
             throw new NotFoundException("Record not found");
@@ -53,9 +48,7 @@ public class HistoryService {
         historyRepository.deleteById(id);
     }
 
-    /**
-     * 清空全部历史（加分项）。
-     */
+    /** Clears all history records. */
     public void clearAll() {
         historyRepository.deleteAll();
     }

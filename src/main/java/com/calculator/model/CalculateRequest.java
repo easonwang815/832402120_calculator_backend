@@ -3,9 +3,7 @@ package com.calculator.model;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * 计算请求体：{ "expression": "(1+2)*3" }
- */
+/** An expression sent by the frontend, such as (1+2)*3. */
 public class CalculateRequest {
 
     @NotBlank(message = "expression must not be blank")

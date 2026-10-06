@@ -9,11 +9,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.function.BiFunction;
 
-/**
- * 表达式求值器：使用调度场算法将中缀表达式转为后缀表达式后求值。
- * 支持四则运算、一元正负号、次方以及 sin/cos/tan/sqrt 科学函数。
- * 三角函数使用角度制。
- */
+/** Uses the shunting-yard algorithm and a value stack to evaluate expressions. Trigonometric functions use degrees. */
 public class ExpressionEvaluator {
 
     private static final int SCALE = 10;

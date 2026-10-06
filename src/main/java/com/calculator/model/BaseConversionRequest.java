@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/** 进制转换请求体。 */
+/** Input for a number-base conversion. */
 public class BaseConversionRequest {
 
     @NotBlank(message = "value must not be blank")

@@ -7,9 +7,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/**
- * 表达式求值器单元测试：覆盖作业要求的全部核心场景。
- */
+/** Checks the expression evaluator and its error handling. */
 class ExpressionEvaluatorTest {
 
     private ExpressionEvaluator evaluator;
@@ -20,7 +18,7 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
-    @DisplayName("基础四则运算")
+    @DisplayName("Basic arithmetic")
     void basicOperations() {
         assertEquals("20", evaluator.evaluate("12+8"));
         assertEquals("4", evaluator.evaluate("10-6"));
@@ -29,7 +27,7 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
-    @DisplayName("运算符优先级")
+    @DisplayName("Operator precedence")
     void precedence() {
         assertEquals("7", evaluator.evaluate("1+2*3"));
         assertEquals("12", evaluator.evaluate("10/2+7"));
@@ -37,14 +35,14 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
-    @DisplayName("括号")
+    @DisplayName("Brackets")
     void parentheses() {
         assertEquals("9", evaluator.evaluate("(1+2)*3"));
         assertEquals("20", evaluator.evaluate("(2+3)*4"));
     }
 
     @Test
-    @DisplayName("一元正负号")
+    @DisplayName("Unary signs")
     void unaryOperators() {
         assertEquals("3", evaluator.evaluate("-5+8"));
         assertEquals("-6", evaluator.evaluate("3*-2"));
@@ -52,13 +50,13 @@ class ExpressionEvaluatorTest {
         assertEquals("-5", evaluator.evaluate("-5"));
         assertEquals("5", evaluator.evaluate("--5"));
         assertEquals("-9", evaluator.evaluate("-(1+2)*3"));
-        // 一元正负号可跟在运算符后（数学上合法：1+(+2)、1+(-2)）
+        // Unary signs can follow an operator, as in 1+(+2) and 1+(-2).
         assertEquals("3", evaluator.evaluate("1++2"));
         assertEquals("-1", evaluator.evaluate("1+-2"));
     }
 
     @Test
-    @DisplayName("小数计算")
+    @DisplayName("Decimal calculations")
     void decimals() {
         assertEquals("10", evaluator.evaluate("2.5*4"));
         assertEquals("6.3", evaluator.evaluate("1.2+5.1"));
@@ -69,7 +67,7 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
-    @DisplayName("次方运算与右结合优先级")
+    @DisplayName("Powers and right associativity")
     void powers() {
         assertEquals("8", evaluator.evaluate("2^3"));
         assertEquals("512", evaluator.evaluate("2^3^2"));
@@ -79,7 +77,7 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
-    @DisplayName("开方和角度制三角函数")
+    @DisplayName("Square roots and trigonometric functions in degrees")
     void scientificFunctions() {
         assertEquals("3", evaluator.evaluate("sqrt(9)"));
         assertEquals("0.5", evaluator.evaluate("sin(30)"));
@@ -89,14 +87,14 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
-    @DisplayName("除零处理")
+    @DisplayName("Division by zero")
     void divisionByZero() {
         CalculatorException ex = assertThrows(CalculatorException.class, () -> evaluator.evaluate("10/0"));
         assertEquals("Division by zero", ex.getMessage());
     }
 
     @Test
-    @DisplayName("无效表达式处理")
+    @DisplayName("Invalid expressions")
     void invalidExpressions() {
         assertInvalid("");
         assertInvalid("   ");
@@ -119,7 +117,7 @@ class ExpressionEvaluatorTest {
     }
 
     @Test
-    @DisplayName("科学函数定义域错误")
+    @DisplayName("Invalid function domains")
     void invalidFunctionArguments() {
         CalculatorException sqrtError = assertThrows(
                 CalculatorException.class, () -> evaluator.evaluate("sqrt(-1)"));

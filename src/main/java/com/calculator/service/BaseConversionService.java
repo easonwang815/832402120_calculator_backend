@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigInteger;
 import java.util.Set;
 
-/** 二、八、十、十六进制整数互转。 */
+/** Converts integers between base 2, 8, 10 and 16. */
 @Service
 public class BaseConversionService {
 

@@ -3,27 +3,10 @@ package com.calculator.calculator;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 词法分析器：把表达式字符串拆成 Token 列表。
- *
- * 支持的语法：
- * - 数字（含小数，如 12、3.14）
- * - 二元运算符 + - * / ^
- * - 科学函数 sin / cos / tan / sqrt
- * - 括号 ( )
- * - 一元正负号（如 -5、3*-2、+5），一元号在后续调度场算法中处理
- *
- * 输入中的空白字符会被忽略；遇到不支持的字符直接抛 Invalid expression。
- */
+/** Splits an expression into numbers, operators, functions and brackets. Spaces are ignored. */
 public class ExpressionParser {
 
-    /**
-     * 将表达式字符串解析为 Token 列表。
-     *
-     * @param input 表达式原文，如 "(1+2)*-3"
-     * @return Token 列表
-     * @throws CalculatorException 表达式为空或包含非法字符时抛出
-     */
+    /** Returns tokens for the input expression, or reports invalid input. */
     public List<Token> parse(String input) {
         if (input == null || input.trim().isEmpty()) {
             throw new CalculatorException("Invalid expression");
@@ -57,7 +40,7 @@ public class ExpressionParser {
                     i++;
                 }
                 String num = input.substring(start, i);
-                // 单独一个 "." 不构成数字；允许 .5 和 1. 这类常见小数写法。
+                // A dot alone is invalid, but .5 and 1. are valid decimal forms.
                 if (!hasDigit) {
                     throw new CalculatorException("Invalid expression");
                 }

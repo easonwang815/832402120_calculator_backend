@@ -9,10 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 计算接口：POST /api/calculate
- * 前端仅传入表达式，计算与历史保存均在后端完成。
- */
+/** Receives expressions. Calculation and history saving happen in the backend. */
 @RestController
 @RequestMapping("/api")
 public class CalculatorController {

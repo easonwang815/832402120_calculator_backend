@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** 进制转换接口：POST /api/convert。 */
+/** API endpoint for number-base conversion. */
 @RestController
 @RequestMapping("/api")
 public class BaseConversionController {

@@ -1,5 +1,5 @@
 package com.calculator.model;
 
-/** 进制转换结果。 */
+/** The result of a number-base conversion. */
 public record BaseConversionResult(String value, int fromBase, int toBase, String result) {
 }

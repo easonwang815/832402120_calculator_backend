@@ -9,12 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 历史记录接口：
- * - GET    /api/history        查询全部历史（时间倒序）
- * - DELETE /api/history/{id}   删除指定记录
- * - DELETE /api/history        清空全部（加分项）
- */
+/** API endpoints for reading, deleting and clearing history. */
 @RestController
 @RequestMapping("/api")
 public class HistoryController {

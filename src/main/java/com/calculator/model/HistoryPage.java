@@ -2,7 +2,7 @@ package com.calculator.model;
 
 import java.util.List;
 
-/** 历史记录搜索和分页结果。 */
+/** History records and page information returned by the API. */
 public record HistoryPage(
         List<CalculationHistory> records,
         int page,

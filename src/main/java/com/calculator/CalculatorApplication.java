@@ -3,9 +3,7 @@ package com.calculator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-/**
- * 后端启动类。
- */
+/** Starts the calculator backend. */
 @SpringBootApplication
 public class CalculatorApplication {
 

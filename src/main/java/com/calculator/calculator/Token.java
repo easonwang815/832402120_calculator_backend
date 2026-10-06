@@ -1,10 +1,6 @@
 package com.calculator.calculator;
 
-/**
- * 词法单元：类型 + 文本值。
- * 例如 "(1+2)*-3" 会被解析为 LPAREN("("), NUMBER("1"), PLUS("+"), NUMBER("2"),
- * RPAREN(")"), MULTIPLY("*"), MINUS("-u", 一元), NUMBER("3")。
- */
+/** One part of an expression, with its type and text value. */
 public class Token {
 
     private final TokenType type;

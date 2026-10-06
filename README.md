@@ -17,6 +17,55 @@ The frontend sends an expression to the backend. The backend calculates the answ
 - Saved history with search, pages, single deletion and clear all
 - Integer conversion between base 2, 8, 10 and 16
 
+## How It Works
+
+The main calculation flow is:
+
+~~~text
+Frontend -> Controller -> CalculatorService -> ExpressionEvaluator
+                                            -> HistoryRepository -> H2
+Frontend <- JSON response with the answer
+~~~
+
+The parser splits the expression into numbers, operators, functions and brackets. The evaluator puts them in the correct order and calculates the answer. A successful calculation is saved before the answer is returned. Invalid expressions and division by zero return an error and are not saved.
+
+## API Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/calculate` | Calculate an expression and save its result |
+| GET | `/api/history` | Read and search history pages |
+| DELETE | `/api/history/{id}` | Delete one history record |
+| DELETE | `/api/history` | Clear all history |
+| POST | `/api/convert` | Convert an integer to another base |
+
+For example, the frontend sends this body to `POST /api/calculate`:
+
+~~~json
+{"expression": "(1+2)*3"}
+~~~
+
+The backend returns:
+
+~~~json
+{"success": true, "expression": "(1+2)*3", "result": "9"}
+~~~
+
+History requests use `keyword`, `page` and `size`. For example, `/api/history?keyword=1&page=0&size=5` returns the first page of matching records. Page numbers start at zero, and the newest records are shown first.
+
+## History Database
+
+The H2 database has a table named `calculation_history`:
+
+| Field | What it stores |
+|---|---|
+| `id` | The record ID |
+| `expression` | The original expression |
+| `result` | The formatted answer as text |
+| `created_at` | The time the backend saved the record |
+
+The database is saved as a file instead of only staying in memory. This is why history is still available after restarting the backend. The frontend always reads history through the API.
+
 ## Project Structure
 
 The Java files are in `src/main/java/com/calculator/`:
@@ -29,7 +78,7 @@ The Java files are in `src/main/java/com/calculator/`:
 - `repository/`: reads and writes history in the database
 - `config/`: handles errors and frontend access
 
-Settings are in `src/main/resources/application.yml`. Design notes are in [`docs/`](docs/), and code style is in [`codestyle.md`](codestyle.md).
+Settings are in `src/main/resources/application.yml`. Design notes are in [`docs/`](docs/), the time record is in [`docs/02_psp.md`](docs/02_psp.md), and code style is in [`codestyle.md`](codestyle.md).
 
 ## Requirements
 
